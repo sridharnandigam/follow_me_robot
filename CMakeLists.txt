@@ -124,15 +124,20 @@ catkin_package(
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
+  ${EIGEN3_INCLUDE_DIRS}
+  ${OpenCV_INCLUDE_DIRS}
 )
 
-add_executable(kinect_run src/kinect_run.cpp)
+add_executable(kinect_run 
+  src/KinectFrame.cpp
+  src/KinectRun.cpp
+  src/kinectFollow.cpp)
 
-target_link_libraries(kinectApril
+target_link_libraries(kinect_run
   ${catkin_LIBRARIES}
   ${OpenCV_LIBRARIES}
-  apriltag
   k4a
+  k4abt
 )
 
 ## Declare a C++ library
