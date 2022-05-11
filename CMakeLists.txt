@@ -11,6 +11,8 @@ find_package(catkin REQUIRED COMPONENTS
   cv_bridge
   geometry_msgs
   image_transport
+  actionlib
+  move_base_msgs
   roscpp
   std_msgs
   tf

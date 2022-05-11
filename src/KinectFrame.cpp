@@ -112,6 +112,8 @@ void KinectFrame::locateJoints()
         printf("Chest position detected at: %f, %f, %f\n", skeleton.joints[K4ABT_JOINT_SPINE_CHEST].position.xyz.x, skeleton.joints[K4ABT_JOINT_SPINE_CHEST].position.xyz.y, skeleton.joints[K4ABT_JOINT_SPINE_CHEST].position.xyz.z);
         _chestXYZ.push_back(skeleton.joints[K4ABT_JOINT_SPINE_CHEST].position);
 
+        _landmarkJoint = _chestXYZ;
+
         k4a_calibration_3d_to_2d(&_calibration, &skeleton.joints[K4ABT_JOINT_SPINE_CHEST].position, K4A_CALIBRATION_TYPE_DEPTH, 
                                 K4A_CALIBRATION_TYPE_COLOR, &xy, &k);
         _jointsXY.push_back(xy);

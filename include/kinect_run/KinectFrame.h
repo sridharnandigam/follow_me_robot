@@ -23,6 +23,7 @@ class KinectFrame{
         cv::Mat drawJointImage();
         std::vector<k4a_float3_t> _chestXYZ;
         std::vector<k4a_float2_t> _jointsXY;
+        k4abt_joint_t _landmarkJoint;
     protected:
         KinectRun *_kr;
         k4a_capture_t _capture;
