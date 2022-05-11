@@ -3,7 +3,9 @@
 using namespace std;
 
 
-KinectRun::KinectRun(){
+KinectRun::KinectRun(KinectFrameRecipient &kfr) : _kfr(kfr){
+    k4a_calibration_t _calibration;
+
     _device = NULL;
     VERIFY(k4a_device_open(0, &_device), "Open K4A Device failed!");
 
@@ -14,15 +16,27 @@ KinectRun::KinectRun(){
     deviceConfig.color_resolution = K4A_COLOR_RESOLUTION_1080P;
     //deviceConfig.color_resolution = K4A_COLOR_RESOLUTION_OFF;
     VERIFY(k4a_device_start_cameras(_device, &deviceConfig), "Start K4A cameras failed!");
+
+    k4abt_tracker_configuration_t tracker_config = K4ABT_TRACKER_CONFIG_DEFAULT;
+
+    k4a_device_get_calibration(_device, K4A_DEPTH_MODE_NFOV_UNBINNED, K4A_COLOR_RESOLUTION_1080P, &_calibration);
+    
+    VERIFY(k4abt_tracker_create(&_calibration, tracker_config, &tracker), "Body tracker initialization failed!");
 }
 KinectRun::~KinectRun(){
+    k4abt_tracker_shutdown(tracker);
+    k4abt_tracker_destroy(tracker);
+
     k4a_device_stop_cameras(_device);
     k4a_device_close(_device);
 }
 
 void KinectRun::update(){
     KinectFrame kf(this);
+
     kf.getSensorCapture();
     kf.bodyFrameCapture();
     kf.locateJoints();
+
+    _kfr.receiveFrame(&kf);
 }

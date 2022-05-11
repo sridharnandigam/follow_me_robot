@@ -1,7 +1,7 @@
 #ifndef KFR_IMAGE_PUBLISH_H
 #define KFR_IMAGE_PUBLISH_H
 
-#include <kinect_pkg/KinectFrameRecipient.h>
+#include <kinect_run/KinectFrameRecepient.h>
 #include <image_transport/image_transport.h>
 #include <ros/ros.h>
 

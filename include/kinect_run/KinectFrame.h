@@ -19,11 +19,15 @@ class KinectFrame{
         void getSensorCapture();
         void bodyFrameCapture();
         void locateJoints();
-        cv::Mat convertImage(k4a_image_t inputImage, unsigned char chan);
+        cv::Mat getColorImage();
+        cv::Mat drawJointImage();
+        std::vector<k4a_float3_t> _chestXYZ;
+        std::vector<k4a_float2_t> _jointsXY;
     protected:
         KinectRun *_kr;
         k4a_capture_t _capture;
         k4abt_frame_t _bodyFrame;
+        k4a_calibration_t _calibration;
 };
 
 #endif
