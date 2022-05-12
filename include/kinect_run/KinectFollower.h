@@ -1,5 +1,5 @@
-#ifndef ROBOT_FOLLOWER_H
-#define ROBOT_FOLLOWER_H
+#ifndef KINECT_FOLLOWER_H
+#define KINECT_FOLLOWER_H
 
 #include <actionlib/client/simple_action_client.h>
 #include <geometry_msgs/TransformStamped.h>
@@ -7,6 +7,8 @@
 #include <tf2_ros/transform_broadcaster.h>
 
 #include <kinect_run/KinectFrameRecepient.h>
+
+#include <string>
 
 typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
 
@@ -19,14 +21,14 @@ typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseCl
 
 */
 
-class RobotFollower : public KinectFrameRecepient{
-public:
-  RobotFollower();
-  ~RobotFollower();
+class KinectFollower : public KinectFrameRecipient{
+  public:
+  KinectFollower();
+  ~KinectFollower();
   void receiveFrame(KinectFrame *frame);
-  void follow(geometry_msgs::TransformStamped transformStamped);
+  void follow();
 
-protected:
+  protected:
   void broadcast(
     ros::Time time,
     double tX, double tY, double tZ, double rX, double rY, double rZ, double rW,

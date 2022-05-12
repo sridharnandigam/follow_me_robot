@@ -3,7 +3,7 @@
 using namespace std;
 
 
-KinectRun::KinectRun(KinectFrameRecipient &kfr) : _kfr(kfr){
+KinectRun::KinectRun(KinectFrameRecipient &kfr1, KinectFrameRecipient &kfr2) : _kfr1(kfr1), _kfr2(kfr2){
     k4a_calibration_t _calibration;
 
     _device = NULL;
@@ -20,6 +20,7 @@ KinectRun::KinectRun(KinectFrameRecipient &kfr) : _kfr(kfr){
     k4abt_tracker_configuration_t tracker_config = K4ABT_TRACKER_CONFIG_DEFAULT;
 
     k4a_device_get_calibration(_device, K4A_DEPTH_MODE_NFOV_UNBINNED, K4A_COLOR_RESOLUTION_1080P, &_calibration);
+    _transformation = k4a::transformation(_calibration);
     
     VERIFY(k4abt_tracker_create(&_calibration, tracker_config, &tracker), "Body tracker initialization failed!");
 }
@@ -37,6 +38,9 @@ void KinectRun::update(){
     kf.getSensorCapture();
     kf.bodyFrameCapture();
     kf.locateJoints();
+    //kf.getAllImages();
+    //kf.computeDepthInfo();
 
-    _kfr.receiveFrame(&kf);
+    _kfr1.receiveFrame(&kf);
+    _kfr2.receiveFrame(&kf);
 }

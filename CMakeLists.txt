@@ -134,6 +134,7 @@ add_executable(kinect_run
   src/KinectFrame.cpp
   src/KinectRun.cpp
   src/KFRImagePublish.cpp
+  src/KinectFollower.cpp
   src/kinectFollow.cpp)
 
 target_link_libraries(kinect_run

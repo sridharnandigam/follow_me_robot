@@ -11,6 +11,10 @@ KinectFrame::~KinectFrame()
 {
     k4a_capture_release(_capture);
     k4abt_frame_release(_bodyFrame);
+    _colorDepthImage.reset();
+    _colorImage.reset();
+    _depthImage.reset();
+    _xyzImage.reset();
 }
 
 void KinectFrame::getSensorCapture()
@@ -112,7 +116,7 @@ void KinectFrame::locateJoints()
         printf("Chest position detected at: %f, %f, %f\n", skeleton.joints[K4ABT_JOINT_SPINE_CHEST].position.xyz.x, skeleton.joints[K4ABT_JOINT_SPINE_CHEST].position.xyz.y, skeleton.joints[K4ABT_JOINT_SPINE_CHEST].position.xyz.z);
         _chestXYZ.push_back(skeleton.joints[K4ABT_JOINT_SPINE_CHEST].position);
 
-        _landmarkJoint = _chestXYZ;
+        _landmarkJoint = skeleton.joints[K4ABT_JOINT_SPINE_CHEST];
 
         k4a_calibration_3d_to_2d(&_calibration, &skeleton.joints[K4ABT_JOINT_SPINE_CHEST].position, K4A_CALIBRATION_TYPE_DEPTH, 
                                 K4A_CALIBRATION_TYPE_COLOR, &xy, &k);
@@ -141,6 +145,20 @@ cv::Mat KinectFrame::getColorImage(){
     return retImage;
 }
 
+void KinectFrame::getAllImages(){
+    _colorImage = k4a_capture_get_color_image(_capture);
+    _depthImage = k4a_capture_get_depth_image(_capture);
+
+    _xyzImage =
+        k4a::image::create(K4A_IMAGE_FORMAT_CUSTOM,
+            _depthImage.get_width_pixels(), _depthImage.get_height_pixels(),
+            _depthImage.get_width_pixels() * 3 * sizeof(int16_t));
+            
+    _colorDepthImage = k4a::image::create(K4A_IMAGE_FORMAT_COLOR_BGRA32,
+        _depthImage.get_width_pixels(), _depthImage.get_height_pixels(),
+        _depthImage.get_width_pixels() * 4 * sizeof(int8_t));
+}
+
 cv::Mat KinectFrame::drawJointImage(){
     cv::Mat colorImage = getColorImage();
 
@@ -152,4 +170,9 @@ cv::Mat KinectFrame::drawJointImage(){
     }
 
     return colorImage;
+}
+
+void KinectFrame::computeDepthInfo() {
+    _kr->_transformation.depth_image_to_point_cloud(_depthImage, K4A_CALIBRATION_TYPE_DEPTH, &_xyzImage);
+    _kr->_transformation.color_image_to_depth_camera(_depthImage, _colorImage, &_colorDepthImage);
 }

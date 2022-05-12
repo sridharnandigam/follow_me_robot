@@ -1,30 +1,37 @@
-#include <kinect_run/RobotFollower.h>
+#include <kinect_run/KinectFollower.h>
 #include <kinect_run/KinectFrame.h>
 
 #include <Eigen/Eigen>
 
 #include <iostream>
 
-RobotFollower::RobotFollower() : _ac("/marvin/move_base", true) {
+using namespace Eigen;
+using namespace std;
+
+KinectFollower::KinectFollower() : _ac("/marvin/move_base", true) {
+    /*
     while(!_ac.waitForServer(ros::Duration(5.0))){
         ROS_INFO("Waiting for the move_base action server to come up");
     }
+    */
 }
 
-RobotFollower::~RobotFollower() {}
+KinectFollower::~KinectFollower() {}
 
-void RobotFollower::receiveFrame(KinectFrame *frame){
-    _landmarkTransform.transform.translation.x = frame->_landmarkJoint.position.xyz.x
-    _landmarkTransform.transform.translation.y = frame->_landmarkJoint.position.xyz.y
-    _landmarkTransform.transform.translation.z = frame->_landmarkJoint.position.xyz.z
+void KinectFollower::receiveFrame(KinectFrame *frame){
+    _landmarkTransform.transform.translation.x = frame->_landmarkJoint.position.xyz.x;
+    _landmarkTransform.transform.translation.y = frame->_landmarkJoint.position.xyz.y;
+    _landmarkTransform.transform.translation.z = frame->_landmarkJoint.position.xyz.z;
     
     _landmarkTransform.transform.rotation.x = frame->_landmarkJoint.orientation.wxyz.x;
     _landmarkTransform.transform.rotation.y = frame->_landmarkJoint.orientation.wxyz.y;
     _landmarkTransform.transform.rotation.z = frame->_landmarkJoint.orientation.wxyz.z;
     _landmarkTransform.transform.rotation.w = frame->_landmarkJoint.orientation.wxyz.w;
+
+    follow();
 }
 
-void RobotFollower::follow() {
+void KinectFollower::follow() {
     /*
         You are going to want to know which axis is X, Y, and Z.
         You should render them by using the "add/TF" in rviz.
@@ -65,7 +72,18 @@ void RobotFollower::follow() {
     MatrixXd markerPos(3,1);
     markerPos(0,0) = _landmarkTransform.transform.translation.x;
     markerPos(1,0) = _landmarkTransform.transform.translation.y;
-    markerPos(2,0) = 0;//transformStamped.transform.translation.z;
+    //markerPos(2,0) = 0;//transformStamped.transform.translation.z;
+    markerPos(2,0) = _landmarkTransform.transform.translation.z;
+
+    broadcast(
+        _landmarkTransform.header.stamp,
+        markerPos(0,0), markerPos(1,0), markerPos(2,0),
+        _landmarkTransform.transform.rotation.x,
+        _landmarkTransform.transform.rotation.y,
+        _landmarkTransform.transform.rotation.z,
+        _landmarkTransform.transform.rotation.w,
+        "chest location"
+    );
 
     /*
         broadcast(
@@ -100,6 +118,7 @@ void RobotFollower::follow() {
         broadcasting both "incoming" and "turned," then "incoming" and "turned"
         should be on top of each other and facing the same direction.
     */ 
+
     double norm = markerPos.norm();
     double angle = atan2(markerPos(1,0) / norm, markerPos(0,0) / norm);
 
@@ -114,18 +133,19 @@ void RobotFollower::follow() {
     Eigen::MatrixXd turned = rotQuat.toRotationMatrix() * xDir;
 
     broadcast(
-        transformStamped.header.stamp,
+        _landmarkTransform.header.stamp,
         turned(0,0), turned(1,0), turned(2,0),
         rotQuat.x(),
         rotQuat.y(),
         rotQuat.z(),
         rotQuat.w(),
-        "chosen"
-    );
+        "chosen");
+
+    
+    //Okay, now we need to actually move the robot.
 
     /*
-        Okay, now we need to actually move the robot.
-    */
+
     move_base_msgs::MoveBaseGoal goal;
 
     goal.target_pose.header.frame_id = "marvin/base_footprint";
@@ -150,13 +170,15 @@ void RobotFollower::follow() {
     ROS_INFO("Sending goal");
     _ac.sendGoal(goal);
     _ac.waitForResult();
+    **/
 }
 
-void RobotFollower::broadcast(
+void KinectFollower::broadcast(
     ros::Time time,
     double tX, double tY, double tZ, double rX, double rY, double rZ, double rW,
     string name) {
     geometry_msgs::TransformStamped transformStamped;
+    printf("begin broadcast\n");
 
     transformStamped.header.stamp = time;
     transformStamped.header.frame_id = "marvin/base_link";

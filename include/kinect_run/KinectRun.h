@@ -25,11 +25,14 @@ class KinectRun{
     public:
         k4a_capture_t _capture;
         k4a_device_t _device;
+        k4a::transformation _transformation;
 
-        KinectFrameRecipient &_kfr;
+        KinectFrameRecipient &_kfr1;
+        KinectFrameRecipient &_kfr2;
+
         k4abt_tracker_t tracker;
 
-        KinectRun(KinectFrameRecipient &kfr);
+        KinectRun(KinectFrameRecipient &kfr1, KinectFrameRecipient &kfr2);
         ~KinectRun();
 
         void update();
