@@ -72,8 +72,8 @@ void KinectFollower::follow() {
     MatrixXd markerPos(3,1);
     markerPos(0,0) = _landmarkTransform.transform.translation.x;
     markerPos(1,0) = _landmarkTransform.transform.translation.y;
-    //markerPos(2,0) = 0;//transformStamped.transform.translation.z;
-    markerPos(2,0) = _landmarkTransform.transform.translation.z;
+    markerPos(2,0) = 0;//transformStamped.transform.translation.z;
+    //markerPos(2,0) = _landmarkTransform.transform.translation.z;
 
     broadcast(
         _landmarkTransform.header.stamp,
