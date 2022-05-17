@@ -93,8 +93,8 @@ void KinectFrame::locateJoints()
         return;
     }
     
-    size_t num_bodies = k4abt_frame_get_num_bodies(_bodyFrame);
-    printf("Locating joints: %zu\n", num_bodies);
+    _num_bodies = k4abt_frame_get_num_bodies(_bodyFrame);
+    printf("Locating joints: %zu\n", _num_bodies);
     uint32_t bodyID = k4abt_frame_get_body_id(_bodyFrame, 0);
     k4a_image_t bodyIndexMap = k4abt_frame_get_body_index_map(_bodyFrame);
     
@@ -106,7 +106,7 @@ void KinectFrame::locateJoints()
     //k4a_device_get_calibration(_kr->_device, K4A_DEPTH_MODE_NFOV_UNBINNED, K4A_COLOR_RESOLUTION_1080P, &currCalibration);
 
     //vector<k4a_float3_t> chest_positions;
-    for (uint32_t i = 0; i < num_bodies; i++)
+    for (uint32_t i = 0; i < _num_bodies; i++)
     {
         k4abt_skeleton_t skeleton;
         k4abt_frame_get_body_skeleton(_bodyFrame, i, &skeleton);
@@ -126,7 +126,7 @@ void KinectFrame::locateJoints()
     // convertImage(bodyIndexMap, CV_8UC1);
     // drawJoints(bodyIndexMap, CV_8UC1, chest_positions);
     k4a_image_release(bodyIndexMap);
-    printf("%zu bodies are detected\n", num_bodies);
+    printf("%zu bodies are detected\n", _num_bodies);
 }
 
 cv::Mat KinectFrame::getColorImage(){
@@ -166,7 +166,7 @@ cv::Mat KinectFrame::drawJointImage(){
 
     for(k4a_float2_t joint : _jointsXY){
         cv::Point2f point(joint.xy.x, joint.xy.y);
-        cv::circle(colorImage, point, 4, cv::Scalar(0, 0, 255), CV_FILLED);
+        cv::circle(colorImage, point, 4, cv::Scalar(0, 0, 255), cv::FILLED);
     }
 
     return colorImage;

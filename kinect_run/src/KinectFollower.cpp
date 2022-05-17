@@ -8,12 +8,7 @@
 using namespace Eigen;
 using namespace std;
 
-KinectFollower::KinectFollower() : _ac("/marvin/move_base", true) {
-    /*
-    while(!_ac.waitForServer(ros::Duration(5.0))){
-        ROS_INFO("Waiting for the move_base action server to come up");
-    }
-    */
+KinectFollower::KinectFollower(ros::NodeHandle &nh) : _nh(nh), _pub(_nh.advertise<geometry_msgs::PoseStamped>("computed", 1)) {
 }
 
 KinectFollower::~KinectFollower() {}
@@ -28,7 +23,10 @@ void KinectFollower::receiveFrame(KinectFrame *frame){
     _landmarkTransform.transform.rotation.z = frame->_landmarkJoint.orientation.wxyz.z;
     _landmarkTransform.transform.rotation.w = frame->_landmarkJoint.orientation.wxyz.w;
 
+     _num_bodies = frame->_num_bodies;
     follow();
+
+    _pub.publish(_computedTransform);
 }
 
 void KinectFollower::follow() {
@@ -74,50 +72,18 @@ void KinectFollower::follow() {
     markerPos(1,0) = _landmarkTransform.transform.translation.y;
     markerPos(2,0) = 0;//transformStamped.transform.translation.z;
     //markerPos(2,0) = _landmarkTransform.transform.translation.z;
-
+markerPos /= 16;
+    /*
     broadcast(
-        _landmarkTransform.header.stamp,
+        ros::Time::now(),
         markerPos(0,0), markerPos(1,0), markerPos(2,0),
         _landmarkTransform.transform.rotation.x,
         _landmarkTransform.transform.rotation.y,
         _landmarkTransform.transform.rotation.z,
         _landmarkTransform.transform.rotation.w,
-        "chest location"
+        "chest_location"
     );
-
-    /*
-        broadcast(
-            );
     */
-
-    /*
-        Compute the norm of markerPos. This is the distance to the robot that
-        you are following. Store it in a variable. Call it "norm."
-
-        Compute the angle between facing straightforward and the angle that
-        "marvin" could turn to to face "ar_tag." You can do this using atan2.
-        Store the result in a variable called "angle."
-
-        Use Eigen::AngleAxisd to compute a rotation such that, if the robot
-        followed that rotation, it would be facing the ar_tag robot.
-        
-        Here, I've made you a variable. xDir. Put "norm" in xDir's x component
-        and make the others 0, so that xDir is facing the x direction and is as
-        long as the distance between the two robots.
-
-        For navigation purposes, "x" is "forward."
-
-        Using the rotation that you've just computed, rotate xDir. Call the 
-        result "turned."
-        
-        Now, use broadcast() to broadcast the result of the above computations,
-        the rotation that you computed is the rotation, and "turned" is the 
-        translation. Call the TF "turned."
-
-        If you have performed this computation correctly, and you are
-        broadcasting both "incoming" and "turned," then "incoming" and "turned"
-        should be on top of each other and facing the same direction.
-    */ 
 
     double norm = markerPos.norm();
     double angle = atan2(markerPos(1,0) / norm, markerPos(0,0) / norm);
@@ -133,16 +99,57 @@ void KinectFollower::follow() {
     Eigen::MatrixXd turned = rotQuat.toRotationMatrix() * xDir;
 
     broadcast(
-        _landmarkTransform.header.stamp,
-        turned(0,0), turned(1,0), turned(2,0),
-        rotQuat.x(),
-        rotQuat.y(),
-        rotQuat.z(),
-        rotQuat.w(),
-        "chosen");
+        ros::Time::now(),
+        turned(0,0), turned(1,0), 0,
+        _landmarkTransform.transform.rotation.x,
+        _landmarkTransform.transform.rotation.y,
+        _landmarkTransform.transform.rotation.z,
+        _landmarkTransform.transform.rotation.w,
+        "chest_location"
+    );
 
     
     //Okay, now we need to actually move the robot.
+    _computedTransform.header.frame_id = "computedTransform";
+    _computedTransform.header.stamp = ros::Time::now();
+
+    if(norm > 1.0 && _num_bodies > 0){
+        _computedTransform.pose.position.x = 0.25 * turned(0, 0);
+        _computedTransform.pose.position.y = 0.25 * turned(1, 0);
+        _computedTransform.pose.position.z = 0;
+    } else{
+        _computedTransform.pose.position.x = 0.0;
+        _computedTransform.pose.position.y = 0.0;
+        _computedTransform.pose.position.z = 0;
+    }
+
+    _computedTransform.pose.orientation.x = rotQuat.x();
+    _computedTransform.pose.orientation.y = rotQuat.y();
+    _computedTransform.pose.orientation.z = rotQuat.z();
+    _computedTransform.pose.orientation.w = rotQuat.w();
+
+    /*
+    _computedTransform.pose.position.x = 1.0;
+    _computedTransform.pose.position.y = 0.0;
+    _computedTransform.pose.position.z = 0;
+
+    _computedTransform.pose.orientation.x = 0.0;
+    _computedTransform.pose.orientation.y = 0.0;
+    _computedTransform.pose.orientation.z = 0.0;
+    _computedTransform.pose.orientation.w = 1.0;
+    */
+
+    broadcast(
+        ros::Time::now(),
+        _computedTransform.pose.position.x,
+        _computedTransform.pose.position.y,
+        _computedTransform.pose.position.z,
+        _computedTransform.pose.orientation.x,
+        _computedTransform.pose.orientation.y,
+        _computedTransform.pose.orientation.z,
+        _computedTransform.pose.orientation.w,
+        "computed");
+
 
     /*
 
@@ -181,7 +188,7 @@ void KinectFollower::broadcast(
     printf("begin broadcast\n");
 
     transformStamped.header.stamp = time;
-    transformStamped.header.frame_id = "marvin/base_link";
+    transformStamped.header.frame_id = "base_link";
     transformStamped.child_frame_id = name;//"go_here";
     transformStamped.transform.translation.x = tX;
     transformStamped.transform.translation.y = tY;

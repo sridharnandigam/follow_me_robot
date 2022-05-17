@@ -30,6 +30,7 @@ class KinectFrame{
         k4abt_joint_t _landmarkJoint;
 
         k4a::image _colorImage, _depthImage, _xyzImage, _colorDepthImage;
+        size_t _num_bodies;
     protected:
         KinectRun *_kr;
         k4a_capture_t _capture;

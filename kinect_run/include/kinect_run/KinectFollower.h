@@ -3,14 +3,15 @@
 
 #include <actionlib/client/simple_action_client.h>
 #include <geometry_msgs/TransformStamped.h>
-#include <move_base_msgs/MoveBaseAction.h>
+#include <geometry_msgs/PoseStamped.h>
+//#include <move_base_msgs/MoveBaseAction.h>
 #include <tf2_ros/transform_broadcaster.h>
 
 #include <kinect_run/KinectFrameRecepient.h>
 
 #include <string>
 
-typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
+//typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
 
 /*
   MoveBaseClient is defined in the tutorial:
@@ -23,7 +24,7 @@ typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseCl
 
 class KinectFollower : public KinectFrameRecipient{
   public:
-  KinectFollower();
+  KinectFollower(ros::NodeHandle &nh);
   ~KinectFollower();
   void receiveFrame(KinectFrame *frame);
   void follow();
@@ -35,8 +36,13 @@ class KinectFollower : public KinectFrameRecipient{
     std::string name);
 
     geometry_msgs::TransformStamped _landmarkTransform;
+    geometry_msgs::PoseStamped _computedTransform;
 
-  MoveBaseClient _ac;
+    ros::NodeHandle _nh;
+    ros::Publisher _pub;
+    size_t _num_bodies;
+
+  //MoveBaseClient _ac;
   tf2_ros::TransformBroadcaster _br;
 };
 
